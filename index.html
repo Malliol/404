@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 — Страница потеряна в пространстве</title>
+<style>
+  :root {
+    --bg: #050505;
+    --white: #f2f2f0;
+    --grey-1: #b8b8b4;
+    --grey-2: #6a6a68;
+    --grey-3: #2a2a29;
+    --line: #3a3a38;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Courier New', ui-monospace, Consolas, monospace;
+    overflow: hidden;
+  }
+
+  body {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Звёздное поле */
+  .stars {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  .stars span {
+    position: absolute;
+    background: var(--white);
+    border-radius: 50%;
+    opacity: 0.6;
+  }
+  .stars span.twinkle {
+    animation: twinkle 4s ease-in-out infinite;
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.15; }
+    50% { opacity: 0.9; }
+  }
+
+  /* Основная сцена */
+  .scene {
+    position: relative;
+    z-index: 2;
+    width: min(92vw, 640px);
+    text-align: center;
+  }
+
+  .orbit-field {
+    position: relative;
+    width: 260px;
+    height: 260px;
+    margin: 0 auto 2.5rem;
+  }
+
+  .ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .ring-1 { width: 100%;  height: 100%; }
+  .ring-2 { width: 70%;   height: 70%; opacity: 0.6; }
+
+  .planet {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 88px;
+    height: 88px;
+    margin: -44px 0 0 -44px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 32% 28%, #fdfdfb 0%, #cfcfcb 22%, #6a6a67 55%, #1c1c1b 85%);
+    box-shadow: inset -18px -14px 30px rgba(0,0,0,0.75);
+  }
+  .planet::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background-image:
+      radial-gradient(circle at 65% 60%, rgba(0,0,0,0.5) 0 6px, transparent 7px),
+      radial-gradient(circle at 30% 65%, rgba(0,0,0,0.35) 0 4px, transparent 5px),
+      radial-gradient(circle at 55% 30%, rgba(0,0,0,0.3) 0 3px, transparent 4px);
+  }
+
+  .moon {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #eee, #555);
+    top: 50%;
+    left: 50%;
+    transform-origin: -130px 0px;
+    animation: spin 9s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg) translateX(130px) rotate(0deg); }
+    to   { transform: rotate(360deg) translateX(130px) rotate(-360deg); }
+  }
+
+  .planet-wrap {
+    position: absolute;
+    inset: 0;
+    animation: drift 22s ease-in-out infinite;
+  }
+
+  @keyframes drift {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(8deg); }
+  }
+
+  .code {
+    font-size: clamp(3.5rem, 12vw, 6rem);
+    letter-spacing: 0.12em;
+    line-height: 1;
+    font-weight: 700;
+    color: var(--white);
+  }
+
+  .message {
+    margin-top: 1.1rem;
+    font-size: 0.95rem;
+    color: var(--grey-1);
+    letter-spacing: 0.03em;
+    line-height: 1.6;
+  }
+
+  .coords {
+    margin-top: 0.6rem;
+    font-size: 0.78rem;
+    color: var(--grey-2);
+    letter-spacing: 0.08em;
+  }
+
+  .back {
+    display: inline-block;
+    margin-top: 2.2rem;
+    padding: 0.7rem 1.6rem;
+    border: 1px solid var(--line);
+    color: var(--white);
+    text-decoration: none;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+  .back:hover {
+    background: var(--white);
+    color: #000;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .planet-wrap, .moon, .stars span.twinkle { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="stars" id="stars"></div>
+
+  <div class="scene">
+    <div class="orbit-field">
+      <div class="ring ring-1"></div>
+      <div class="ring ring-2"></div>
+      <div class="planet-wrap">
+        <div class="planet"></div>
+        <div class="moon"></div>
+      </div>
+    </div>
+
+    <div class="code">404</div>
+    <p class="message">Этой страницы нет ни на одной известной орбите.<br>Возможно, она никогда не существовала — или её унесло.</p>
+    <p class="coords">ПОСЛЕДНИЕ КООРДИНАТЫ: НЕИЗВЕСТНЫ</p>
+  </div>
+
+  <script>
+    // генерация звёзд
+    const field = document.getElementById('stars');
+    const total = 120;
+    for (let i = 0; i < total; i++) {
+      const s = document.createElement('span');
+      const size = Math.random() * 2 + 0.6;
+      s.style.width = size + 'px';
+      s.style.height = size + 'px';
+      s.style.top = Math.random() * 100 + '%';
+      s.style.left = Math.random() * 100 + '%';
+      if (Math.random() > 0.6) {
+        s.classList.add('twinkle');
+        s.style.animationDelay = (Math.random() * 4) + 's';
+      }
+      field.appendChild(s);
+    }
+  </script>
+
+</body>
+</html>
