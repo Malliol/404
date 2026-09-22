@@ -1,1 +1,177 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ставка</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: #050505;
+    --white: #f2f2f0;
+    --grey-1: #b8b8b4;
+    --grey-2: #6a6a68;
+    --line: #3a3a38;
+    --track: #201f1e;
+  }
 
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Courier New', ui-monospace, Consolas, monospace;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1.6rem;
+  }
+
+  .label {
+    text-align: center;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    color: var(--grey-2);
+    margin-bottom: 0.4rem;
+  }
+
+  .readout {
+    text-align: center;
+    font-size: clamp(3rem, 22vw, 4.5rem);
+    font-weight: 700;
+    margin-bottom: 2.2rem;
+  }
+  .readout span {
+    font-size: 0.5em;
+    color: var(--grey-1);
+    font-weight: 400;
+  }
+
+  .slider-wrap {
+    padding: 0 0.4rem;
+    margin-bottom: 2.4rem;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 2px;
+    background: var(--line);
+    outline: none;
+    margin: 1.2rem 0;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, #fdfdfb, #8a8a86 55%, #1c1c1b 90%);
+    cursor: pointer;
+    box-shadow: inset -4px -3px 6px rgba(0,0,0,0.6);
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, #fdfdfb, #8a8a86 55%, #1c1c1b 90%);
+    cursor: pointer;
+    box-shadow: inset -4px -3px 6px rgba(0,0,0,0.6);
+  }
+
+  .scale-marks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    color: var(--grey-2);
+    letter-spacing: 0.04em;
+  }
+
+  .save-btn {
+    display: block;
+    width: 100%;
+    padding: 0.9rem;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--white);
+    font-family: inherit;
+    font-size: 0.92rem;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .save-btn:active {
+    background: var(--white);
+    color: #000;
+  }
+
+  .hint {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.7rem;
+    color: var(--grey-2);
+  }
+</style>
+</head>
+<body>
+
+  <div class="label">ЗАДАЙТЕ СТАВКУ</div>
+  <div class="readout"><span id="pct">46</span><span>%</span></div>
+
+  <div class="slider-wrap">
+    <input type="range" id="slider" min="0" max="100" step="1" value="46">
+    <div class="scale-marks"><span>0</span><span>50</span><span>100</span></div>
+  </div>
+
+  <button class="save-btn" id="saveBtn">Сохранить ставку</button>
+  <p class="hint" id="hint">Значение отправится боту после сохранения</p>
+
+  <script>
+    const tg = window.Telegram ? window.Telegram.WebApp : null;
+    const slider = document.getElementById('slider');
+    const pct = document.getElementById('pct');
+    const saveBtn = document.getElementById('saveBtn');
+    const hint = document.getElementById('hint');
+
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
+
+    // Попытка подтянуть текущее значение ставки с сайта
+    fetch('../bot/rates.json?t=' + Date.now())
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data && typeof data.rate === 'number') {
+          slider.value = data.rate;
+          pct.textContent = data.rate;
+        }
+      })
+      .catch(() => { /* сайт недоступен локально — оставляем значение по умолчанию */ });
+
+    slider.addEventListener('input', () => {
+      pct.textContent = slider.value;
+    });
+
+    saveBtn.addEventListener('click', () => {
+      const value = parseInt(slider.value, 10);
+      if (tg && tg.sendData) {
+        tg.sendData(JSON.stringify({ rate: value }));
+        hint.textContent = 'Отправлено. Можно закрыть окно.';
+        tg.close();
+      } else {
+        hint.textContent = 'Открыто вне Telegram — отправка недоступна.';
+      }
+    });
+  </script>
+
+</body>
+</html>
